@@ -46,6 +46,11 @@ async function run() {
     const user_details = client.db("Free-Flow").collection("user-details");
     const users = client.db("Free-Flow").collection("users");
 
+    app.get("/users", async (req, res) => {
+      const result = await users.find().toArray();
+      res.send(result);
+    });
+
     app.get("/user_details", async (req, res) => {
       const result = await user_details.find().toArray();
       res.send(result);
