@@ -45,6 +45,7 @@ async function run() {
   try {
     const user_details = client.db("Free-Flow").collection("user-details");
     const users = client.db("Free-Flow").collection("users");
+    const skills = client.db("Free-Flow").collection("skills");
 
     app.get("/users", async (req, res) => {
       const result = await users.find().toArray();
@@ -54,6 +55,11 @@ async function run() {
     app.get("/user_details", async (req, res) => {
       const result = await user_details.find().toArray();
       res.send(result);
+    });
+
+    app.get("/skills", async (req, res) => {
+      const result = await skills.find().toArray();
+      res.send(result)
     });
 
     // all post method should be this under below =====
