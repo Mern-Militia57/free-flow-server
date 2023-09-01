@@ -29,6 +29,9 @@ const verifyJWT = (req, res, next) => {
   });
 };
 
+
+
+
 const { MongoClient, ServerApiVersion } = require("mongodb");
 
 const uri = `mongodb+srv://${process.env.USER_NAME}:${process.env.USER_PASSCODE}@cluster0.j7sm3dy.mongodb.net/?retryWrites=true&w=majority`;
@@ -56,6 +59,22 @@ async function run() {
       res.send(result);
     });
 
+
+    app.get(`/userdataquery`,  async (req, res) => {
+        const getData = req.query.email
+       console.log(getData);
+      const findID = { email: getData };
+   const result =  await user_details.find(findID).toArray()
+      res.send(result)
+    })
+
+
+
+
+
+
+
+
     // all post method should be this under below =====
 
     // users post in this api
@@ -71,11 +90,26 @@ async function run() {
     });
 
     // user-details post in this api-----------
-    app.post("/userdetails_post", async (req, res) => {
-      const getdata = req.body;
-      const result = await user_details.insertOne(getdata);
-      res.send(result);
-    });
+  app.post("/userdetails_post", async(req,res)=>{
+      const getdata = req.body
+      const sameidcheck = { email: getdata.email}
+     const findData = await  user_details.findOne(sameidcheck)
+     if(findData){
+      return res.status(400).send({ message: "Data already exists" });
+     }
+  
+      const result = await user_details.insertOne(getdata)
+      res.send(result)
+  })
+
+
+
+
+
+
+
+
+
 
     app.post("/jwt", (req, res) => {
       const user = req.body;
