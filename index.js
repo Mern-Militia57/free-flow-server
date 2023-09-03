@@ -29,10 +29,7 @@ const verifyJWT = (req, res, next) => {
   });
 };
 
-
-
-
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 const uri = `mongodb+srv://${process.env.USER_NAME}:${process.env.USER_PASSCODE}@cluster0.j7sm3dy.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -60,24 +57,16 @@ async function run() {
       res.send(result);
     });
 
-
-    app.get(`/userdataquery`,  async (req, res) => {
-        const getData = req.query.email
-       console.log(getData);
+    app.get(`/userdataquery`, async (req, res) => {
+      const getData = req.query.email;
       const findID = { email: getData };
-   const result =  await user_details.find(findID).toArray()
-      res.send(result)
-    })
-
-
-
-
-
-
+      const result = await user_details.find(findID).toArray();
+      res.send(result);
+    });
 
     app.get("/skills", async (req, res) => {
       const result = await skills.find().toArray();
-      res.send(result)
+      res.send(result);
     });
 
     // all post method should be this under below =====
@@ -95,26 +84,17 @@ async function run() {
     });
 
     // user-details post in this api-----------
-  app.post("/userdetails_post", async(req,res)=>{
-      const getdata = req.body
-      const sameidcheck = { email: getdata.email}
-     const findData = await  user_details.findOne(sameidcheck)
-     if(findData){
-      return res.status(400).send({ message: "Data already exists" });
-     }
-  
-      const result = await user_details.insertOne(getdata)
-      res.send(result)
-  })
+    app.post("/userdetails_post", async (req, res) => {
+      const getdata = req.body;
+      const sameidcheck = { email: getdata.email };
+      const findData = await user_details.findOne(sameidcheck);
+      if (findData) {
+        return res.status(400).send({ message: "Data already exists" });
+      }
 
-
-
-
-
-
-
-
-
+      const result = await user_details.insertOne(getdata);
+      res.send(result);
+    });
 
     app.post("/jwt", (req, res) => {
       const user = req.body;
@@ -122,6 +102,29 @@ async function run() {
         expiresIn: "30d",
       });
       res.send({ token });
+    });
+
+    // all patch api method under this line-----------
+
+    app.patch("/users/admin/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          role: "admin",
+        },
+      };
+      const result = await users.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    // all delete api method under this line-----------
+
+    app.delete("/users/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await users.deleteOne(query);
+      res.send(result);
     });
 
     // Send a ping to confirm a successful connection
