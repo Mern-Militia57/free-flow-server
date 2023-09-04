@@ -52,6 +52,17 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/users/admin/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      if (req.decoded.email !== email) {
+        res.send({ admin: false });
+      }
+      const query = { email: email };
+      const user = await users.findOne(query);
+      const result = { admin: user?.role === "admin" };
+      res.send(result);
+    });
+
     app.get("/user_details", async (req, res) => {
       const result = await user_details.find().toArray();
       res.send(result);
