@@ -46,6 +46,7 @@ async function run() {
     const user_details = client.db("Free-Flow").collection("user-details");
     const users = client.db("Free-Flow").collection("users");
     const skills = client.db("Free-Flow").collection("skills");
+    const projects = client.db("Free-Flow").collection("projects");
 
     app.get("/users", async (req, res) => {
       const result = await users.find().toArray();
@@ -106,6 +107,14 @@ async function run() {
       const result = await user_details.insertOne(getdata);
       res.send(result);
     });
+
+    // projects will be posting in this api
+
+    app.post("/post_projects", async(req, res) =>{
+      const projectData = req.body
+      const result = await projects.insertOne(projectData)
+      res.send(result)
+    })
 
     app.post("/jwt", (req, res) => {
       const user = req.body;
