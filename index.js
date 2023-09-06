@@ -48,7 +48,17 @@ async function run() {
     const skills = client.db("Free-Flow").collection("skills");
     const projects = client.db("Free-Flow").collection("projects");
 
-    app.get("/users", async (req, res) => {
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await users.findOne(query);
+      if (user?.role !== "admin") {
+        return res.status(403).send({ error: true, message: "only for admin" });
+      }
+      next();
+    };
+
+    app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
       const result = await users.find().toArray();
       res.send(result);
     });
@@ -81,6 +91,11 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/projects", async (req, res) =>{
+      const result = await projects.find().toArray()
+      res.send(result)
+    })
+
     // all post method should be this under below =====
 
     // users post in this api
@@ -110,11 +125,11 @@ async function run() {
 
     // projects will be posting in this api
 
-    app.post("/post_projects", async(req, res) =>{
-      const projectData = req.body
-      const result = await projects.insertOne(projectData)
-      res.send(result)
-    })
+    app.post("/post_projects", async (req, res) => {
+      const projectData = req.body;
+      const result = await projects.insertOne(projectData);
+      res.send(result);
+    });
 
     app.post("/jwt", (req, res) => {
       const user = req.body;
@@ -126,7 +141,7 @@ async function run() {
 
     // all patch api method under this line-----------
 
-    app.patch("/users/admin/:id", async (req, res) => {
+    app.patch("/users/admin/:id", verifyJWT, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
@@ -138,14 +153,49 @@ async function run() {
       res.send(result);
     });
 
+    app.patch(
+      "/project/approve/:id",
+      verifyJWT,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const updateStatus = {
+          $set: {
+            status: "approved",
+          },
+        };
+        const result = await projects.updateOne(filter, updateStatus);
+        res.send(result);
+      }
+    );
+    app.patch("/project/deny/:id", verifyJWT, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateStatus = {
+        $set: {
+          status: "denied",
+        },
+      };
+      const result = await projects.updateOne(filter, updateStatus);
+      res.send(result);
+    });
+
     // all delete api method under this line-----------
 
-    app.delete("/users/:id", verifyJWT, async (req, res) => {
+    app.delete("/users/:id", verifyJWT, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await users.deleteOne(query);
       res.send(result);
     });
+
+    app.delete("/projects/:id", verifyJWT, verifyAdmin, async(req,res) =>{
+      const id = req.params.id
+      const query = {_id : new ObjectId(id)}
+      const result = await projects.deleteOne(query)
+      res.send(result)
+    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
