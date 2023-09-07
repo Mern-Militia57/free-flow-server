@@ -96,6 +96,19 @@ async function run() {
       res.send(result)
     })
 
+    // seller get api
+
+    app.get("/users/seller/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      if (req.decoded.email !== email) {
+        res.send({ seller: false });
+      }
+      const query = { email: email };
+      const user = await users.findOne(query);
+      const result = { instructor: user?.role === "seller" };
+      res.send(result);
+    });
+
     // all post method should be this under below =====
 
     // users post in this api
