@@ -63,17 +63,6 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/users/admin/:email", verifyJWT, async (req, res) => {
-      const email = req.params.email;
-      if (req.decoded.email !== email) {
-        res.send({ admin: false });
-      }
-      const query = { email: email };
-      const user = await users.findOne(query);
-      const result = { admin: user?.role === "admin" };
-      res.send(result);
-    });
-
     app.get("/user_details", async (req, res) => {
       const result = await user_details.find().toArray();
       res.send(result);
@@ -91,13 +80,23 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/projects", async (req, res) =>{
-      const result = await projects.find().toArray()
-      res.send(result)
-    })
+    app.get("/projects", async (req, res) => {
+      const result = await projects.find().toArray();
+      res.send(result);
+    });
 
+    app.get("/users/admin/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      if (req.decoded.email !== email) {
+        res.send({ admin: false });
+      }
+      const query = { email: email };
+      const user = await users.findOne(query);
+      const result = { admin: user?.role === "admin" };
+      res.send(result);
+    });
+    
     // seller get api
-
     app.get("/users/seller/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       if (req.decoded.email !== email) {
@@ -105,7 +104,7 @@ async function run() {
       }
       const query = { email: email };
       const user = await users.findOne(query);
-      const result = { instructor: user?.role === "seller" };
+      const result = { seller: user?.role === "seller" };
       res.send(result);
     });
 
@@ -166,6 +165,18 @@ async function run() {
       res.send(result);
     });
 
+    app.patch("/users/seller/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      const filter = { email: email };
+      const updateDoc = {
+        $set: {
+          role: "seller",
+        },
+      };
+      const result = await users.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
     app.patch(
       "/project/approve/:id",
       verifyJWT,
@@ -203,12 +214,12 @@ async function run() {
       res.send(result);
     });
 
-    app.delete("/projects/:id", verifyJWT, verifyAdmin, async(req,res) =>{
-      const id = req.params.id
-      const query = {_id : new ObjectId(id)}
-      const result = await projects.deleteOne(query)
-      res.send(result)
-    })
+    app.delete("/projects/:id", verifyJWT, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await projects.deleteOne(query);
+      res.send(result);
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
