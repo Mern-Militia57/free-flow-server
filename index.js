@@ -104,15 +104,9 @@ async function run() {
       const result = await users.find().toArray();
       res.send(result);
     });
-
-    app.get("/users/admin/:email", verifyJWT, async (req, res) => {
-      const email = req.params.email;
-      if (req.decoded.email !== email) {
-        res.send({ admin: false });
-      }
-      const query = { email: email };
-      const user = await users.findOne(query);
-      const result = { admin: user?.role === "admin" };
+    // getting blogs
+    app.get("/dashboard/buyer/blogs", async (req, res) => {
+      const result = await blogs.find().toArray();
       res.send(result);
     });
 
@@ -143,8 +137,18 @@ async function run() {
       res.send(result)
     })
 
+    app.get("/users/admin/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      if (req.decoded.email !== email) {
+        res.send({ admin: false });
+      }
+      const query = { email: email };
+      const user = await users.findOne(query);
+      const result = { admin: user?.role === "admin" };
+      res.send(result);
+    });
+    
     // seller get api
-
     app.get("/users/seller/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       if (req.decoded.email !== email) {
@@ -152,7 +156,7 @@ async function run() {
       }
       const query = { email: email };
       const user = await users.findOne(query);
-      const result = { instructor: user?.role === "seller" };
+      const result = { seller: user?.role === "seller" };
       res.send(result);
     });
 
@@ -201,6 +205,14 @@ async function run() {
 
 
 
+
+    // blog post
+    app.post("/dashboard/buyer/blogs",async(req,res)=>{
+      const data=req.body
+      const result = await blogs.insertOne(data);
+      console.log('new user',result);
+      res.send(result)
+    })
 
     app.post("/jwt", (req, res) => {
       const user = req.body;
@@ -320,10 +332,17 @@ res.redirect(`http://localhost:3000/payment/success/${req.params.transID}`)
       res.send(result);
     });
 
-
-
-
-
+    app.patch("/users/seller/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      const filter = { email: email };
+      const updateDoc = {
+        $set: {
+          role: "seller",
+        },
+      };
+      const result = await users.updateOne(filter, updateDoc);
+      res.send(result);
+    });
 
     app.patch(
       "/project/approve/:id",
@@ -362,12 +381,12 @@ res.redirect(`http://localhost:3000/payment/success/${req.params.transID}`)
       res.send(result);
     });
 
-    app.delete("/projects/:id", verifyJWT, verifyAdmin, async(req,res) =>{
-      const id = req.params.id
-      const query = {_id : new ObjectId(id)}
-      const result = await projects.deleteOne(query)
-      res.send(result)
-    })
+    app.delete("/projects/:id", verifyJWT, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await projects.deleteOne(query);
+      res.send(result);
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
