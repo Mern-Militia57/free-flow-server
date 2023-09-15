@@ -47,6 +47,7 @@ async function run() {
     const users = client.db("Free-Flow").collection("users");
     const skills = client.db("Free-Flow").collection("skills");
     const projects = client.db("Free-Flow").collection("projects");
+    const blogs = client.db("Free-Flow").collection("blogs");
 
     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded.email;
@@ -60,6 +61,11 @@ async function run() {
 
     app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
       const result = await users.find().toArray();
+      res.send(result);
+    });
+    // getting blogs
+    app.get("/dashboard/buyer/blogs", async (req, res) => {
+      const result = await blogs.find().toArray();
       res.send(result);
     });
 
@@ -143,6 +149,14 @@ async function run() {
       const result = await projects.insertOne(projectData);
       res.send(result);
     });
+
+    // blog post
+    app.post("/dashboard/buyer/blogs",async(req,res)=>{
+      const data=req.body
+      const result = await blogs.insertOne(data);
+      console.log('new user',result);
+      res.send(result)
+    })
 
     app.post("/jwt", (req, res) => {
       const user = req.body;
