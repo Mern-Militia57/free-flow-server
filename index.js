@@ -1,29 +1,12 @@
 const express = require("express");
 const app = express();
-const SSLCommerzPayment = require('sslcommerz-lts')
+const SSLCommerzPayment = require("sslcommerz-lts");
 const cors = require("cors");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 const verifyJWT = (req, res, next) => {
   const authorization = req.headers.authorization;
@@ -49,9 +32,6 @@ const verifyJWT = (req, res, next) => {
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
-
-
-
 const uri = `mongodb+srv://${process.env.USER_NAME}:${process.env.USER_PASSCODE}@cluster0.j7sm3dy.mongodb.net/?retryWrites=true&w=majority`;
 
 const client = new MongoClient(uri, {
@@ -62,23 +42,9 @@ const client = new MongoClient(uri, {
   },
 });
 
-
-
-const store_id =process.env.STORE_ID
-const store_passwd =process.env.STORE_PASS
-const is_live = false 
-
-
-
-
-
-
-
-
-
-
-
-
+const store_id = process.env.STORE_ID;
+const store_passwd = process.env.STORE_PASS;
+const is_live = false;
 
 async function run() {
   try {
@@ -87,8 +53,8 @@ async function run() {
     const skills = client.db("Free-Flow").collection("skills");
     const projects = client.db("Free-Flow").collection("projects");
     const gigs_post = client.db("Free-Flow").collection("gigs");
-   const payment_order = client.db("Free-Flow").collection("payment");
-
+    const payment_order = client.db("Free-Flow").collection("payment");
+    const blogs = client.db("Free-Flow").collection("blogs");
 
     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded.email;
@@ -117,7 +83,7 @@ async function run() {
 
     app.get(`/userdataquery`, async (req, res) => {
       const getData = req.query.email;
-      const findID = { email : getData };
+      const findID = { email: getData };
       const result = await user_details.find(findID).toArray();
       res.send(result);
     });
@@ -128,14 +94,14 @@ async function run() {
     });
 
     app.get("/gigs_provide", async (req, res) => {
-      const result = await gigs_post.find().toArray()
+      const result = await gigs_post.find().toArray();
       res.send(result);
     });
 
-    app.get("/projects", async (req, res) =>{
-      const result = await projects.find().toArray()
-      res.send(result)
-    })
+    app.get("/projects", async (req, res) => {
+      const result = await projects.find().toArray();
+      res.send(result);
+    });
 
     app.get("/users/admin/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
@@ -147,7 +113,7 @@ async function run() {
       const result = { admin: user?.role === "admin" };
       res.send(result);
     });
-    
+
     // seller get api
     app.get("/users/seller/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
@@ -199,20 +165,13 @@ async function run() {
       const result = await gigs_post.insertOne(gigData);
       res.send(result);
     });
- 
-
-
-
-
-
 
     // blog post
-    app.post("/dashboard/buyer/blogs",async(req,res)=>{
-      const data=req.body
+    app.post("/dashboard/buyer/blogs", async (req, res) => {
+      const data = req.body;
       const result = await blogs.insertOne(data);
-      console.log('new user',result);
-      res.send(result)
-    })
+      res.send(result);
+    });
 
     app.post("/jwt", (req, res) => {
       const user = req.body;
@@ -222,101 +181,80 @@ async function run() {
       res.send({ token });
     });
 
+    const tran_Id = new ObjectId().toString();
+    app.post("/buyerorder", async (req, res) => {
+      const { pakage, ordergigsdetails, userProfile, buyerEmail } = req.body;
 
-const tran_Id = new ObjectId().toString()
-app.post('/buerorder', async(req,res)=>{
-const {pakage,ordergigsdetails,userProfile,buyerEmail} = req.body
+      const data = {
+        total_amount: Number(pakage?.price),
+        currency: "BDT",
+        tran_id: tran_Id,
+        success_url: `http://localhost:5000/payment/success/${tran_Id}`,
+        fail_url: "http://localhost:3030/fail",
+        cancel_url: "http://localhost:3030/cancel",
+        ipn_url: "http://localhost:3030/ipn",
+        shipping_method: "online",
+        product_name: pakage?.name,
+        product_category: ordergigsdetails?.OverViewData?.categories_gigs,
+        product_profile: "general",
+        cus_name: userProfile?.display_Name,
+        cus_email: buyerEmail,
+        cus_add1: userProfile?.address,
+        cus_add2: "unknown",
+        cus_city: "Dhaka",
+        cus_state: "Dhaka",
+        cus_postcode: userProfile?.post_Code,
+        cus_country: userProfile?.country,
+        cus_phone: userProfile?.phone_Number,
+        cus_fax: userProfile?.phone_Number,
+        ship_name: "online",
+        ship_add1: "online",
+        ship_add2: "Dhaka",
+        ship_city: "Dhaka",
+        ship_state: "Dhaka",
+        ship_postcode: 1000,
+        ship_country: "Bangladesh",
+      };
 
-const data = {
-  total_amount: Number(pakage?.price),
-  currency: 'BDT',
-  tran_id: tran_Id,
-  success_url: `http://localhost:5000/payment/success/${tran_Id}`,
-  fail_url: 'http://localhost:3030/fail',
-  cancel_url: 'http://localhost:3030/cancel',
-  ipn_url: 'http://localhost:3030/ipn',
-  shipping_method: 'online',
-  product_name: pakage?.name,
-  product_category:ordergigsdetails?.OverViewData?.categories_gigs,
-  product_profile: 'general',
-  cus_name: userProfile?.display_Name,
-  cus_email: buyerEmail,
-  cus_add1: userProfile?.address,
-  cus_add2: "unknown",
-  cus_city: 'Dhaka',
-  cus_state: 'Dhaka',
-  cus_postcode: userProfile?.post_Code,
-  cus_country: userProfile?.country,
-  cus_phone: userProfile?.phone_Number,
-  cus_fax: userProfile?.phone_Number,
-  ship_name: 'online',
-  ship_add1: 'online',
-  ship_add2: 'Dhaka',
-  ship_city: 'Dhaka',
-  ship_state: 'Dhaka',
-  ship_postcode: 1000,
-  ship_country: 'Bangladesh',
-};
+      const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live);
 
+      sslcz.init(data).then((apiResponse) => {
+        let GatewayPageURL = apiResponse.GatewayPageURL;
+        res.send({ url: GatewayPageURL });
+        console.log("Redirecting to: ", GatewayPageURL);
 
-const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live)
+        const paymentStatus = {
+          pakageinfromation: pakage,
+          gigs: ordergigsdetails,
+          buyerInformation: userProfile,
+          buyer_email: buyerEmail,
+          transID: tran_Id,
+          payementStatus: true,
+        };
+        payment_order.insertOne(paymentStatus);
+      });
 
-sslcz.init(data).then(apiResponse => {
-let GatewayPageURL = apiResponse.GatewayPageURL
-res.send({url:GatewayPageURL})
-  console.log('Redirecting to: ', GatewayPageURL)
+      app.post(`/payment/success/:transID`, async (req, res) => {
+        res.redirect(
+          `http://localhost:3000/payment/success/${req.params.transID}`
+        );
+      });
+    });
 
-  const paymentStatus = {pakageinfromation:pakage,gigs:ordergigsdetails,buyerInformation:userProfile,buyer_email:buyerEmail,transID:tran_Id,payementStatus:true}
- payment_order.insertOne(paymentStatus)
+    // let files = []
 
-})
+    //     app.put("/gigs_post/:email", async (req, res) => {
+    //       const gigData = req.params.email
+    //         const review = req.body
 
-app.post(`/payment/success/:transID`,async(req,res)=>{
-res.redirect(`http://localhost:3000/payment/success/${req.params.transID}`)
-})
+    //    files = [...files,review]
 
+    //     const serachData = {Email:gigData}
+    //     const updateData = {$set : {reviews:files} }
 
-
-
-
-
-})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// let files = []
-
-//     app.put("/gigs_post/:email", async (req, res) => {
-//       const gigData = req.params.email
-//         const review = req.body
-
-//    files = [...files,review]
-
-//     const serachData = {Email:gigData}
-//     const updateData = {$set : {reviews:files} }
-
-
-//       const result = await gigs_post.updateOne(serachData,updateData);
-//       res.send(result);
-//     });
-
-
-
-
+    //       const result = await gigs_post.updateOne(serachData,updateData);
+    //       res.send(result);
+    //     });
 
     // all patch api method under this line-----------
 
