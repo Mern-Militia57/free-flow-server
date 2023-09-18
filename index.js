@@ -126,6 +126,12 @@ async function run() {
       res.send(result);
     });
 
+    // payment api
+    app.get("/payment", verifyJWT, verifyAdmin, async (req, res) => {
+      const result = await payment_order.find().toArray();
+      res.send(result);
+    });
+
     // all post method should be this under below =====
 
     // users post in this api
@@ -182,7 +188,7 @@ async function run() {
     });
 
     const tran_Id = new ObjectId().toString();
-    app.post("/buyerorder", async (req, res) => {
+    app.post("/buerorder", async (req, res) => {
       const { pakage, ordergigsdetails, userProfile, buyerEmail } = req.body;
 
       const data = {
@@ -218,21 +224,34 @@ async function run() {
 
       const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live);
 
-      sslcz.init(data).then((apiResponse) => {
-        let GatewayPageURL = apiResponse.GatewayPageURL;
-        res.send({ url: GatewayPageURL });
-        console.log("Redirecting to: ", GatewayPageURL);
+      sslcz
+        .init(data)
+        .then((apiResponse) => {
+          if (apiResponse && apiResponse.GatewayPageURL) {
+            let GatewayPageURL = apiResponse.GatewayPageURL;
+            res.send({ url: GatewayPageURL });
+            console.log("Redirecting to: ", GatewayPageURL);
 
-        const paymentStatus = {
-          pakageinfromation: pakage,
-          gigs: ordergigsdetails,
-          buyerInformation: userProfile,
-          buyer_email: buyerEmail,
-          transID: tran_Id,
-          payementStatus: true,
-        };
-        payment_order.insertOne(paymentStatus);
-      });
+            const paymentStatus = {
+              pakageinfromation: pakage,
+              gigs: ordergigsdetails,
+              buyerInformation: userProfile,
+              buyer_email: buyerEmail,
+              transID: tran_Id,
+              payementStatus: true,
+            };
+            payment_order.insertOne(paymentStatus);
+          } else {
+            // Handle the case where GatewayPageURL is not present in the response.
+            console.error("GatewayPageURL not found in the response");
+            res.status(500).send("Payment initialization failed");
+          }
+        })
+        .catch((error) => {
+          // Handle any errors that might occur during payment initialization.
+          console.error("Payment initialization error:", error);
+          res.status(500).send("Payment initialization failed");
+        });
 
       app.post(`/payment/success/:transID`, async (req, res) => {
         res.redirect(
@@ -316,6 +335,13 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await users.deleteOne(query);
+      res.send(result);
+    });
+
+    app.delete("/payment/:id", verifyJWT, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await payment_order.deleteOne(query);
       res.send(result);
     });
 
