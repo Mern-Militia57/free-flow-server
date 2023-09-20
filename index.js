@@ -53,6 +53,7 @@ async function run() {
     const skills = client.db("Free-Flow").collection("skills");
     const projects = client.db("Free-Flow").collection("projects");
     const gigs_post = client.db("Free-Flow").collection("gigs");
+    const proposal = client.db("Free-Flow").collection("proposals");
     const payment_order = client.db("Free-Flow").collection("payment");
     const blogs = client.db("Free-Flow").collection("blogs");
 
@@ -166,6 +167,13 @@ async function run() {
       const result = await projects.insertOne(projectData);
       res.send(result);
     });
+
+    app.post("/project_proposal", async (req, res) => {
+      const proposalData = req.body;
+      const result = await proposal.insertOne(proposalData);
+      res.send(result);
+    });
+
     app.post("/gigs_post", async (req, res) => {
       const gigData = req.body;
       const result = await gigs_post.insertOne(gigData);
