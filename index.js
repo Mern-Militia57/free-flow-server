@@ -1,14 +1,20 @@
+// const multer = require('multer');
 const express = require("express");
 const app = express();
 const SSLCommerzPayment = require('sslcommerz-lts')
 const cors = require("cors");
 require("dotenv").config();
+
 const jwt = require("jsonwebtoken");
 const port = process.env.PORT || 5000;
+// const fs = require('fs');
+// const { google }= require('googleapis');
+
+const storage = multer.memoryStorage();
+// const upload = multer({ storage });
+
 app.use(cors());
 app.use(express.json());
-
-
 
 
 
@@ -52,6 +58,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 
 
+
 const uri = `mongodb+srv://${process.env.USER_NAME}:${process.env.USER_PASSCODE}@cluster0.j7sm3dy.mongodb.net/?retryWrites=true&w=majority`;
 
 const client = new MongoClient(uri, {
@@ -88,6 +95,7 @@ async function run() {
     const projects = client.db("Free-Flow").collection("projects");
     const gigs_post = client.db("Free-Flow").collection("gigs");
    const payment_order = client.db("Free-Flow").collection("payment");
+   const blogs = client.db("Free-Flow").collection("blogs");
 
 
     const verifyAdmin = async (req, res, next) => {
@@ -136,6 +144,12 @@ async function run() {
       const result = await projects.find().toArray()
       res.send(result)
     })
+    app.get("/payment_history", async (req, res) =>{
+      const result = await payment_order.find().toArray()
+      res.send(result)
+    })
+
+
 
     app.get("/users/admin/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
@@ -200,6 +214,7 @@ async function run() {
       res.send(result);
     });
  
+
 
 
 
@@ -275,16 +290,26 @@ app.post(`/payment/success/:transID`,async(req,res)=>{
 res.redirect(`http://localhost:3000/payment/success/${req.params.transID}`)
 })
 
-
-
-
-
-
 })
 
 
 
+app.patch('/accheptTime', async(req,res)=>{
+  const {id,times} = req.body
 
+  const filter = { _id: new ObjectId(id) };
+
+   const setvalues = {
+    $set: { 
+      accheptTime:times,
+    }
+  
+  }
+
+ const result = await payment_order.updateOne(filter,setvalues)
+res.send(result)
+
+})
 
 
 
@@ -401,3 +426,5 @@ run().catch(console.dir);
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
+
+
