@@ -10,7 +10,7 @@ const port = process.env.PORT || 5000;
 // const fs = require('fs');
 // const { google }= require('googleapis');
 
-const storage = multer.memoryStorage();
+// const storage = multer.memoryStorage();
 // const upload = multer({ storage });
 
 app.use(cors());
@@ -209,87 +209,70 @@ async function run() {
       res.send({ token });
     });
 
-    const tran_Id = new ObjectId().toString();
-    app.post("/buerorder", async (req, res) => {
-      const { pakage, ordergigsdetails, userProfile, buyerEmail } = req.body;
-
-      const data = {
-        total_amount: Number(pakage?.price),
-        currency: "BDT",
-        tran_id: tran_Id,
-        success_url: `http://localhost:5000/payment/success/${tran_Id}`,
-        fail_url: "http://localhost:3030/fail",
-        cancel_url: "http://localhost:3030/cancel",
-        ipn_url: "http://localhost:3030/ipn",
-        shipping_method: "online",
-        product_name: pakage?.name,
-        product_category: ordergigsdetails?.OverViewData?.categories_gigs,
-        product_profile: "general",
-        cus_name: userProfile?.display_Name,
-        cus_email: buyerEmail,
-        cus_add1: userProfile?.address,
-        cus_add2: "unknown",
-        cus_city: "Dhaka",
-        cus_state: "Dhaka",
-        cus_postcode: userProfile?.post_Code,
-        cus_country: userProfile?.country,
-        cus_phone: userProfile?.phone_Number,
-        cus_fax: userProfile?.phone_Number,
-        ship_name: "online",
-        ship_add1: "online",
-        ship_add2: "Dhaka",
-        ship_city: "Dhaka",
-        ship_state: "Dhaka",
-        ship_postcode: 1000,
-        ship_country: "Bangladesh",
-      };
-
-      const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live);
-
-      sslcz
-        .init(data)
-        .then((apiResponse) => {
-          if (apiResponse && apiResponse.GatewayPageURL) {
-            let GatewayPageURL = apiResponse.GatewayPageURL;
-            res.send({ url: GatewayPageURL });
-            console.log("Redirecting to: ", GatewayPageURL);
-
-            const paymentStatus = {
-              pakageinfromation: pakage,
-              gigs: ordergigsdetails,
-              buyerInformation: userProfile,
-              buyer_email: buyerEmail,
-              transID: tran_Id,
-              payementStatus: true,
-            };
-            payment_order.insertOne(paymentStatus);
-          } else {
-            // Handle the case where GatewayPageURL is not present in the response.
-            console.error("GatewayPageURL not found in the response");
-            res.status(500).send("Payment initialization failed");
-          }
-        })
-        .catch((error) => {
-          // Handle any errors that might occur during payment initialization.
-          console.error("Payment initialization error:", error);
-          res.status(500).send("Payment initialization failed");
-        });
-
-      app.post(`/payment/success/:transID`, async (req, res) => {
-        res.redirect(
-          `http://localhost:3000/payment/success/${req.params.transID}`
-        );
-      });
-    });
-
-  const paymentStatus = {pakageinfromation:pakage,gigs:ordergigsdetails,buyerInformation:userProfile,buyer_email:buyerEmail,transID:tran_Id,payementStatus:true}
- payment_order.insertOne(paymentStatus)
+ 
+    const tran_Id = new ObjectId().toString()
+    app.post('/buerorder', async(req,res)=>{
+    const {pakage,ordergigsdetails,userProfile,buyerEmail} = req.body
+    
+    const data = {
+      total_amount: Number(pakage?.price),
+      currency: 'BDT',
+      tran_id: tran_Id,
+      success_url: `http://localhost:5000/payment/success/${tran_Id}`,
+      fail_url: 'http://localhost:3030/fail',
+      cancel_url: 'http://localhost:3030/cancel',
+      ipn_url: 'http://localhost:3030/ipn',
+      shipping_method: 'online',
+      product_name: pakage?.name,
+      product_category:ordergigsdetails?.OverViewData?.categories_gigs,
+      product_profile: 'general',
+      cus_name: userProfile?.display_Name,
+      cus_email: buyerEmail,
+      cus_add1: userProfile?.address,
+      cus_add2: "unknown",
+      cus_city: 'Dhaka',
+      cus_state: 'Dhaka',
+      cus_postcode: userProfile?.post_Code,
+      cus_country: userProfile?.country,
+      cus_phone: userProfile?.phone_Number,
+      cus_fax: userProfile?.phone_Number,
+      ship_name: 'online',
+      ship_add1: 'online',
+      ship_add2: 'Dhaka',
+      ship_city: 'Dhaka',
+      ship_state: 'Dhaka',
+      ship_postcode: 1000,
+      ship_country: 'Bangladesh',
+    };
+    
+    
+    const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live)
+    
+    sslcz.init(data).then(apiResponse => {
+    let GatewayPageURL = apiResponse.GatewayPageURL
+    res.send({url:GatewayPageURL})
+      console.log('Redirecting to: ', GatewayPageURL)
+    
+      const paymentStatus = {pakageinfromation:pakage,gigs:ordergigsdetails,buyerInformation:userProfile,buyer_email:buyerEmail,transID:tran_Id,payementStatus:true}
+     payment_order.insertOne(paymentStatus)
+    
+    })
+    
+    app.post(`/payment/success/:transID`,async(req,res)=>{
+    res.redirect(`http://localhost:3000/payment/success/${req.params.transID}`)
+    })
+    
+  })
 
 
 
-app.post(`/payment/success/:transID`,async(req,res)=>{
-res.redirect(`http://localhost:3000/payment/success/${req.params.transID}`)
-})
+
+
+
+
+
+
+
 
 
 
