@@ -297,6 +297,30 @@ async function run() {
       res.send(result);
     });
 
+    app.patch("/users/seller/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          role: "seller",
+        },
+      };
+      const result = await users.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    app.patch("/users/buyer/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          role: "buyer",
+        },
+      };
+      const result = await users.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
     app.patch("/users/seller/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       const filter = { email: email };
