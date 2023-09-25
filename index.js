@@ -107,15 +107,14 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/projects", async (req, res) =>{
-      const result = await projects.find().toArray()
-      res.send(result)
-    })
-    app.get("/payment_history", async (req, res) =>{
-      const result = await payment_order.find().toArray()
-      res.send(result)
-    })
-
+    app.get("/projects", async (req, res) => {
+      const result = await projects.find().toArray();
+      res.send(result);
+    });
+    app.get("/payment_history", async (req, res) => {
+      const result = await payment_order.find().toArray();
+      res.send(result);
+    });
 
     app.get("/users/admin/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
@@ -193,7 +192,6 @@ async function run() {
       res.send(result);
     });
 
-
     // blog post
     app.post("/dashboard/buyer/blogs", async (req, res) => {
       const data = req.body;
@@ -209,119 +207,95 @@ async function run() {
       res.send({ token });
     });
 
- 
-    const tran_Id = new ObjectId().toString()
-    app.post('/buerorder', async(req,res)=>{
-    const {pakage,ordergigsdetails,userProfile,buyerEmail} = req.body
-    
-    const data = {
-      total_amount: Number(pakage?.price),
-      currency: 'BDT',
-      tran_id: tran_Id,
-      success_url: `http://localhost:5000/payment/success/${tran_Id}`,
-      fail_url: 'http://localhost:3030/fail',
-      cancel_url: 'http://localhost:3030/cancel',
-      ipn_url: 'http://localhost:3030/ipn',
-      shipping_method: 'online',
-      product_name: pakage?.name,
-      product_category:ordergigsdetails?.OverViewData?.categories_gigs,
-      product_profile: 'general',
-      cus_name: userProfile?.display_Name,
-      cus_email: buyerEmail,
-      cus_add1: userProfile?.address,
-      cus_add2: "unknown",
-      cus_city: 'Dhaka',
-      cus_state: 'Dhaka',
-      cus_postcode: userProfile?.post_Code,
-      cus_country: userProfile?.country,
-      cus_phone: userProfile?.phone_Number,
-      cus_fax: userProfile?.phone_Number,
-      ship_name: 'online',
-      ship_add1: 'online',
-      ship_add2: 'Dhaka',
-      ship_city: 'Dhaka',
-      ship_state: 'Dhaka',
-      ship_postcode: 1000,
-      ship_country: 'Bangladesh',
-    };
-    
-    
-    const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live)
-    
-    sslcz.init(data).then(apiResponse => {
-    let GatewayPageURL = apiResponse.GatewayPageURL
-    res.send({url:GatewayPageURL})
-      console.log('Redirecting to: ', GatewayPageURL)
-    
-      const paymentStatus = {pakageinfromation:pakage,gigs:ordergigsdetails,buyerInformation:userProfile,buyer_email:buyerEmail,transID:tran_Id,payementStatus:true}
-     payment_order.insertOne(paymentStatus)
-    
-    })
-    
-    app.post(`/payment/success/:transID`,async(req,res)=>{
-    res.redirect(`http://localhost:3000/payment/success/${req.params.transID}`)
-    })
-    
-  })
+    const tran_Id = new ObjectId().toString();
+    app.post("/buerorder", async (req, res) => {
+      const { pakage, ordergigsdetails, userProfile, buyerEmail } = req.body;
 
+      const data = {
+        total_amount: Number(pakage?.price),
+        currency: "BDT",
+        tran_id: tran_Id,
+        success_url: `http://localhost:5000/payment/success/${tran_Id}`,
+        fail_url: "http://localhost:3030/fail",
+        cancel_url: "http://localhost:3030/cancel",
+        ipn_url: "http://localhost:3030/ipn",
+        shipping_method: "online",
+        product_name: pakage?.name,
+        product_category: ordergigsdetails?.OverViewData?.categories_gigs,
+        product_profile: "general",
+        cus_name: userProfile?.display_Name,
+        cus_email: buyerEmail,
+        cus_add1: userProfile?.address,
+        cus_add2: "unknown",
+        cus_city: "Dhaka",
+        cus_state: "Dhaka",
+        cus_postcode: userProfile?.post_Code,
+        cus_country: userProfile?.country,
+        cus_phone: userProfile?.phone_Number,
+        cus_fax: userProfile?.phone_Number,
+        ship_name: "online",
+        ship_add1: "online",
+        ship_add2: "Dhaka",
+        ship_city: "Dhaka",
+        ship_state: "Dhaka",
+        ship_postcode: 1000,
+        ship_country: "Bangladesh",
+      };
 
+      const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live);
 
+      sslcz.init(data).then((apiResponse) => {
+        let GatewayPageURL = apiResponse.GatewayPageURL;
+        res.send({ url: GatewayPageURL });
+        console.log("Redirecting to: ", GatewayPageURL);
 
+        const paymentStatus = {
+          pakageinfromation: pakage,
+          gigs: ordergigsdetails,
+          buyerInformation: userProfile,
+          buyer_email: buyerEmail,
+          transID: tran_Id,
+          payementStatus: true,
+        };
+        payment_order.insertOne(paymentStatus);
+      });
 
+      app.post(`/payment/success/:transID`, async (req, res) => {
+        res.redirect(
+          `http://localhost:3000/payment/success/${req.params.transID}`
+        );
+      });
+    });
 
+    app.patch("/accheptTime", async (req, res) => {
+      const { id, times } = req.body;
 
+      const filter = { _id: new ObjectId(id) };
 
+      const setvalues = {
+        $set: {
+          accheptTime: times,
+        },
+      };
 
+      const result = await payment_order.updateOne(filter, setvalues);
+      res.send(result);
+    });
 
+    // let files = []
 
+    //     app.put("/gigs_post/:email", async (req, res) => {
+    //       const gigData = req.params.email
+    //         const review = req.body
 
+    //    files = [...files,review]
 
+    //     const serachData = {Email:gigData}
+    //     const updateData = {$set : {reviews:files} }
 
-
-app.patch('/accheptTime', async(req,res)=>{
-  const {id,times} = req.body
-
-  const filter = { _id: new ObjectId(id) };
-
-   const setvalues = {
-    $set: { 
-      accheptTime:times,
-    }
-  
-  }
-
- const result = await payment_order.updateOne(filter,setvalues)
-res.send(result)
-
-})
-
-
-
-
-
-
-
-
-
-
-
-
-
-// let files = []
-
-//     app.put("/gigs_post/:email", async (req, res) => {
-//       const gigData = req.params.email
-//         const review = req.body
-
-//    files = [...files,review]
-
-//     const serachData = {Email:gigData}
-//     const updateData = {$set : {reviews:files} }
-
-
-//       const result = await gigs_post.updateOne(serachData,updateData);
-//       res.send(result);
-//     });
+    //       const result = await gigs_post.updateOne(serachData,updateData);
+    //       res.send(result);
+    //     });
 
     //     app.put("/gigs_post/:email", async (req, res) => {
     //       const gigData = req.params.email
@@ -450,5 +424,3 @@ run().catch(console.dir);
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
-
-
